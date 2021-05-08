@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="generator" content="CoffeeCup HTML Editor (www.coffeecup.com)">
+    <meta name="dcterms.created" content="Ср, 10 июн 2015 05:27:33 GMT">
+    <meta name="description" content="">
+    <meta name="keywords" content="">
+    <title>backfrf readme</title>
+
+    <style type="text/css">
+    <!--
+    body {
+      color:#000000;
+      background-color:#FFFFFF;
+      background-image:url('Background Image');
+      background-repeat:no-repeat;
+    }
+    a  { color:#0000FF; }
+    a:visited { color:#800080; }
+    a:hover { color:#008000; }
+    a:active { color:#FF0000; }
+    -->
+    </style>
+    <!--[if IE]>
+    <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <h2>0. intro</h2>
+    frf-pane - это программа, которая предназначена для комфортного офлайнового просмотра записей с фрифидика
+    <br>
+    Программа работает <span style= "color: red">совместно</span> с программой backfrf и ставится в <i>тот же каталог, где размещена программа backfrf</i>
+<h2>1. настройка</h2>
+В файле настроек <i>pane.ini</i> можно задать следующие параметры работы программы:<br>
+debug, port<br><br>
+Описание этих параметров - ниже в пункте 5
+<h2>2. запуск</h2>
+<h3>2.1. индексирование</h3>
+<code>frf-pane build <i>feedname</i></code>
+<br>
+или 
+<br>
+<code>frf-pane build @myname</code>
+<br>
+(имя фида берется из настроек)
+<h3>2.2. запуск сервера</h3>
+<code>frf-pane server <i>feedname</i></code>
+<br>
+или 
+<br>
+<code>frf-pane server @myname</code>
+<br>
+(имя фида берется из настроек)
+
+<h2>3. просмотр</h2>
+После запуска сервера просмотр выполняется в браузере по адресу http://localhost:3000/ (по умолчанию).<br>
+Если номер порта изменялся в настройках, то просмотр будет по адресу http://localhost:NNNN/, где NNNN - номер заданного порта
+<h2>5. параметры настроек</h2>
+Пользовательские параметры хранятся в файле <i>pane.ini</i> в секции [default]:<br>
+<b>debug</b> - режим записи логов о ходе работы программы<br>
+Возможные значения:<br>
+0 - не записывать логи<br>
+1 - записывать логи<br><br>
+<b>port</b> - номер порта, на котором будет работать встроенный веб-сервер<br>
+Возможные значения:<br>
+:NNNN - вместо NNNN цифровой номер порта<br><br>
+</body>
+</html>
