@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-    "github.com/xartreal/frfpanehtml"
+	"github.com/xartreal/frfpanehtml"
 )
 
 var jpath string //json path

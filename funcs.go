@@ -3,6 +3,7 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"strings"
 )
@@ -45,4 +46,12 @@ func inlistcount(listname string, indb *KVBase) int {
 		return 0
 	}
 	return len(strings.Split(string(rec), "\n")) - 1
+}
+
+func writepid(pid int) {
+	ioutil.WriteFile(Config.pidfile, []byte(fmt.Sprintf("%d", pid)), 0644)
+}
+
+func rmpid() {
+	os.Remove(Config.pidfile)
 }

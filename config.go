@@ -7,7 +7,7 @@ import (
 	"github.com/vaughan0/go-ini"
 )
 
-var myversion = "0.3.1"
+var myversion = "0.3.2"
 
 //var useragent = "ARL backfrf/" + myversion
 
@@ -20,10 +20,10 @@ var RunCfg struct {
 }
 
 var Config struct {
-	//	offset    int
 	step      int
 	debugmode int
 	maxlast   int
+	pidfile   string
 }
 
 func getIniVar(file ini.File, section string, name string) string {
@@ -46,6 +46,7 @@ func ReadConf() {
 	if !isexists("pane.ini") {
 		Config.debugmode = 0
 		Config.step = 30
+		Config.pidfile = ""
 		RunCfg.port = ":3000"
 		return
 	}
@@ -55,6 +56,7 @@ func ReadConf() {
 	}
 	Config.step = getIniNum(file, "default", "step")
 	Config.debugmode = getIniNum(file, "default", "debug")
+	Config.pidfile, _ = file.Get("default", "pidfile")
 	RunCfg.port, _ = file.Get("default", "port")
 }
 

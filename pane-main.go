@@ -8,7 +8,8 @@ import (
 func helpprog() {
 	fmt.Printf("Usage: \n")
 	fmt.Printf("build indexes: frf-pane build <feed>\n")
-	fmt.Printf("server: frf-pane server <feed>\n")
+	fmt.Printf("list feeds:    frf-pane list all\n")
+	fmt.Printf("server:        frf-pane server <feed>\n")
 	os.Exit(1)
 }
 
@@ -18,6 +19,10 @@ func main() {
 		helpprog()
 	}
 	feedname := os.Args[2]
+	if os.Args[1] == "list" {
+		listFeeds(feedname)
+		os.Exit(0)
+	}
 	if feedname == "@myname" {
 		feedname = ReadBFConf()
 	}
@@ -45,6 +50,10 @@ func main() {
 		defer closeDB(&ByMonthDB)
 		loadtemplates()
 		RunCfg.maxlastlist = (len(recsDB(&ListDB)) - 1) * Config.step
+		if len(Config.pidfile) > 2 {
+			pid := os.Getpid()
+			writepid(pid)
+		}
 		startServer()
 	default:
 		outerror(2, "Unknown command '%s'\n", os.Args[1])

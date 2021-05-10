@@ -9,11 +9,13 @@ import (
 
 	"github.com/facette/natsort"
 	"github.com/labstack/echo"
-    "github.com/xartreal/frfpanehtml"
+	"github.com/xartreal/frfpanehtml"
 )
 
+var e *echo.Echo
+
 func startServer() {
-	e := echo.New()
+	e = echo.New()
 	e.Static("/media", RunCfg.feedpath+"media")
 	e.Static("/x", "template")
 	e.GET("/", mainpage)
@@ -23,6 +25,8 @@ func startServer() {
 	e.GET("/s", stathandler)
 	e.GET("/f", findFrontHandler)
 	e.POST("/f", findBackHandler)
+	e.GET("/c", changeFeedFront)
+	e.GET("/cx/:feed", changeFeedHandler)
 	e.Start(RunCfg.port)
 
 }
@@ -159,7 +163,6 @@ func findBackHandler(c echo.Context) error {
 	out := ""
 	founded := []string{}
 	for i := 0; i < len(xlist); i++ {
-		//	out += xlist[i] + "<br>"
 		fbin, _ := ListDB.MyCollection.Get([]byte(xlist[i]))
 		list := strings.Split(string(fbin), "\n")
 		for j := 0; j < len(list); j++ {
@@ -174,4 +177,41 @@ func findBackHandler(c echo.Context) error {
 	}
 	out = genhtml(founded, "0", false, "Find: "+qword+" ("+strconv.Itoa(len(founded))+")", qword)
 	return c.HTML(200, out)
+}
+
+func changeFeedFront(c echo.Context) error {
+	feedlist := getFeedList()
+	out := "<h3>Select feed</h3>"
+	out += "<table>"
+	for k, v := range feedlist {
+		if strings.Contains(v, "#") { //no active jsons
+			continue
+		}
+		if !isexists("feeds/" + k + "/pane/list.db") {
+			continue
+		}
+		out += fmt.Sprintf(`<tr><td><a href=/cx/%s>%s</a></td><td>%s</td></tr>`, k, k, v)
+	}
+	out += "</table>"
+	return c.HTML(200, mkhtml(out, "Change feed"))
+}
+
+func changeFeedHandler(c echo.Context) error {
+	newfeed := c.Param("feed")
+	if !isexists("feeds/" + newfeed + "/pane/list.db") {
+		return c.HTML(200, mkhtml("Incorrect or noindexed feed", "Change feed"))
+	}
+	closeDB(&ListDB)
+	closeDB(&HashtagDB)
+	closeDB(&ByMonthDB)
+	MkFeedPath(newfeed)
+	dbpath := RunCfg.feedpath + "pane/"
+	openDB(dbpath+"list.db", "pane", &ListDB)
+	openDB(dbpath+"hashtag.db", "pane", &HashtagDB)
+	openDB(dbpath+"tym.db", "pane", &ByMonthDB)
+	loadtemplates()
+	RunCfg.maxlastlist = (len(recsDB(&ListDB)) - 1) * Config.step
+	e.Static("/media", RunCfg.feedpath+"media") //rewrite server rules
+	out := "Changed to feed '" + newfeed + "'"
+	return c.HTML(200, mkhtml(out, "Change feed"))
 }

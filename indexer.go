@@ -5,14 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-
 	"strconv"
 	"strings"
 	"time"
 
-    "github.com/xartreal/frfpanehtml"
-
 	"github.com/mpvl/unique"
+	"github.com/xartreal/frfpanehtml"
 )
 
 var (
