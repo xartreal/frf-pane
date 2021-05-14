@@ -52,14 +52,12 @@ func tlisthandler(c echo.Context) error {
 	list := recsDB(&ListDB)
 	natsort.Sort(list)
 	for i := 0; i < len(list); i++ {
-		if len(list[i]) < 2 {
-			continue
+		if len(list[i]) > 1 {
+			item := strings.TrimPrefix(list[i], "list_")
+			out += "<a href=/t/" + item + "> offset " + item + "</a><br>"
 		}
-		item := strings.Replace(list[i], "list_", "", -1)
-		out += "<a href=/t/" + item + "> offset " + item + "</a><br>"
 	}
-	out = mkhtml(out, "Timeline")
-	return c.HTML(200, out)
+	return c.HTML(200, mkhtml(out, "Timeline"))
 }
 
 func mhandler(c echo.Context) error {
@@ -75,66 +73,54 @@ func mhandler(c echo.Context) error {
 
 func mlisthandler(c echo.Context) error {
 	out := "<h2>By month</h2>"
-	list := recsDB(&ByMonthDB)
-	out += calendar(list)
+	out += calendar(recsDB(&ByMonthDB))
 	out = "<tr><td>" + out + "</td></tr>"
-	out = mkhtml(out, "By month")
-	return c.HTML(200, out)
+	return c.HTML(200, mkhtml(out, "By month"))
 }
 
 func hhandler(c echo.Context) error {
-	lnum, _ := url.QueryUnescape(c.Param("id"))
-	if lnum == "all" {
+	htag, _ := url.QueryUnescape(c.Param("id"))
+	if htag == "all" {
 		return hlisthandler(c)
 	}
-	fbin, _ := HashtagDB.MyCollection.Get([]byte(lnum))
+	fbin, _ := HashtagDB.MyCollection.Get([]byte(htag))
 	list := strings.Split(string(fbin), "\n")
-	title := "Hashtag #" + lnum
-	return c.HTML(200, genhtml(list, lnum, false, title, ""))
+	title := "Hashtag #" + htag
+	return c.HTML(200, genhtml(list, htag, false, title, ""))
 }
 
 func hlisthandler(c echo.Context) error {
 	out := "<h2>Hashtags</h2>"
 	list := recsDB(&HashtagDB)
 	for i := 0; i < len(list); i++ {
-		var id = list[i]
-		if len(id) < 2 {
-			continue
+		if len(list[i]) > 2 {
+			out += fmt.Sprintf("<a href=/h/%s>%s</a> (%d)<br>", list[i], list[i],
+				inlistcount(list[i], &HashtagDB))
 		}
-		hcnt := inlistcount(id, &HashtagDB)
-		out += fmt.Sprintf("<a href=/h/%s>%s</a> (%d)<br>", id, id, hcnt)
 	}
-	out = mkhtml(out, "Hashtags")
-	return c.HTML(200, out)
+	return c.HTML(200, mkhtml(out, "Hashtags"))
+}
+
+func statdb(indb *KVBase, title string) string {
+	list := recsDB(indb)
+	out := fmt.Sprintf("<p><b>%s</b>: %d items</p><p>", title, len(list)-1)
+	for i := 0; i < len(list); i++ {
+		if len(list[i]) > 3 {
+			items, _ := indb.MyCollection.Get([]byte(list[i]))
+			xi := strings.Split(string(items), "\n")
+			out += fmt.Sprintf("%s (%d), ", list[i], len(xi)-1)
+		}
+	}
+	return out
 }
 
 func stathandler(c echo.Context) error {
 	out := "<h2>Statistics</h2>"
 	list := recsDB(&ListDB)
 	out += fmt.Sprintf("<p><b>Pages</b>: %d (~%d records)</p>", len(list)-1, (len(list)-1)*30)
-	list = recsDB(&ByMonthDB)
-	out += fmt.Sprintf("<p><b>By month</b>: %d items</p><p>", len(list)-1)
-	for i := 0; i < len(list); i++ {
-		if len(list[i]) < 3 {
-			continue
-		}
-		items, _ := ByMonthDB.MyCollection.Get([]byte(list[i]))
-		xi := strings.Split(string(items), "\n")
-		out += fmt.Sprintf("%s (%d), ", list[i], len(xi)-1)
-	}
-	list = recsDB(&HashtagDB)
-	out += fmt.Sprintf("</p><p><b>By hashtag</b>: %d items</p><p>", len(list)-1)
-	for i := 0; i < len(list); i++ {
-		if len(list[i]) < 3 {
-			continue
-		}
-		items, _ := HashtagDB.MyCollection.Get([]byte(list[i]))
-		xi := strings.Split(string(items), "\n")
-		out += fmt.Sprintf("%s (%d), ", list[i], len(xi)-1)
-	}
-	//
-	out = mkhtml(out, "Statistics")
-	return c.HTML(200, out)
+	out += statdb(&ByMonthDB, "By month")
+	out += statdb(&HashtagDB, "By hashtag")
+	return c.HTML(200, mkhtml(out, "Statistics"))
 }
 
 func findFrontHandler(c echo.Context) error {
@@ -149,8 +135,7 @@ func findFrontHandler(c echo.Context) error {
   	<button type=submit class="button" value=Submit>Find</button>
   	</form>
 	`
-	out = mkhtml(out, "Find")
-	return c.HTML(200, out)
+	return c.HTML(200, mkhtml(out, "Find"))
 }
 
 func findBackHandler(c echo.Context) error {
@@ -158,25 +143,44 @@ func findBackHandler(c echo.Context) error {
 	if len([]rune(qword)) < 3 {
 		return c.HTML(200, mkhtml("Request too small", "Error"))
 	}
+	if RunCfg.ftsenabled {
+		return findFTSHandler(c)
+	}
 	xlist := recsDB(&ListDB)
 	natsort.Sort(xlist)
-	out := ""
 	founded := []string{}
 	for i := 0; i < len(xlist); i++ {
 		fbin, _ := ListDB.MyCollection.Get([]byte(xlist[i]))
 		list := strings.Split(string(fbin), "\n")
 		for j := 0; j < len(list); j++ {
-			if len(list[j]) < 5 {
-				continue
-			}
-			ftxt := frfpanehtml.LoadJson(jpath + list[j]).TextOnly()
-			if strings.Contains(ftxt, qword) {
-				founded = append(founded, list[j])
+			if len(list[j]) > 4 {
+				ftxt := frfpanehtml.LoadJson(jpath + list[j]).TextOnly()
+				if strings.Contains(ftxt, qword) {
+					founded = append(founded, list[j])
+				}
 			}
 		}
 	}
-	out = genhtml(founded, "0", false, "Find: "+qword+" ("+strconv.Itoa(len(founded))+")", qword)
-	return c.HTML(200, out)
+	return c.HTML(200, genhtml(founded, "0", false,
+		"Find: "+qword+" ("+strconv.Itoa(len(founded))+")", qword))
+}
+
+func findFTSHandler(c echo.Context) error {
+	qword := c.FormValue("qword")
+	keys := recsDB(&IdxDB)
+	var founded = []string{}
+	for i := 0; i < len(keys); i++ {
+		if strings.Contains(keys[i], qword) {
+			vbin, _ := IdxDB.MyCollection.Get([]byte(keys[i]))
+			vx := strings.Split(string(vbin), "\n")
+			founded = append(founded, vx...)
+		}
+	}
+	closeDB(&IdxDB)
+	founded = uniqueNonEmptyElementsOf(founded)
+	founded = timesort(founded)
+	return c.HTML(200, genhtml(founded, "0", false,
+		"Find: "+qword+" ("+strconv.Itoa(len(founded))+")", qword))
 }
 
 func changeFeedFront(c echo.Context) error {
@@ -184,11 +188,8 @@ func changeFeedFront(c echo.Context) error {
 	out := "<h3>Select feed</h3>"
 	out += "<table>"
 	for k, v := range feedlist {
-		if strings.Contains(v, "#") { //no active jsons
-			continue
-		}
-		if !isexists("feeds/" + k + "/pane/list.db") {
-			continue
+		if strings.Contains(v, "#") || !isexists("feeds/"+k+"/pane/list.db") {
+			continue //no active jsons or no pane index
 		}
 		out += fmt.Sprintf(`<tr><td><a href=/cx/%s>%s</a></td><td>%s</td></tr>`, k, k, v)
 	}
@@ -204,11 +205,20 @@ func changeFeedHandler(c echo.Context) error {
 	closeDB(&ListDB)
 	closeDB(&HashtagDB)
 	closeDB(&ByMonthDB)
+	if RunCfg.ftsenabled {
+		closeDB(&IdxDB)
+		closeDB(&TlxDB)
+	}
 	MkFeedPath(newfeed)
 	dbpath := RunCfg.feedpath + "pane/"
 	openDB(dbpath+"list.db", "pane", &ListDB)
 	openDB(dbpath+"hashtag.db", "pane", &HashtagDB)
 	openDB(dbpath+"tym.db", "pane", &ByMonthDB)
+	RunCfg.ftsenabled = isexists(dbpath + "index.db")
+	if RunCfg.ftsenabled {
+		openDB(dbpath+"index.db", "pane", &IdxDB)
+		openDB(dbpath+"timelx.db", "pane", &TlxDB)
+	}
 	loadtemplates()
 	RunCfg.maxlastlist = (len(recsDB(&ListDB)) - 1) * Config.step
 	e.Static("/media", RunCfg.feedpath+"media") //rewrite server rules

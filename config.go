@@ -7,7 +7,7 @@ import (
 	"github.com/vaughan0/go-ini"
 )
 
-var myversion = "0.3.2"
+var myversion = "0.3.3"
 
 //var useragent = "ARL backfrf/" + myversion
 
@@ -17,6 +17,7 @@ var RunCfg struct {
 	myname      string
 	feedname    string
 	maxlastlist int
+	ftsenabled  bool
 }
 
 var Config struct {

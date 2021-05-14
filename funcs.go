@@ -48,10 +48,27 @@ func inlistcount(listname string, indb *KVBase) int {
 	return len(strings.Split(string(rec), "\n")) - 1
 }
 
-func writepid(pid int) {
-	ioutil.WriteFile(Config.pidfile, []byte(fmt.Sprintf("%d", pid)), 0644)
+func writepid() {
+	ioutil.WriteFile(Config.pidfile, []byte(fmt.Sprintf("%d", os.Getpid())), 0644)
 }
 
 func rmpid() {
 	os.Remove(Config.pidfile)
+}
+
+func bToMb(b uint64) uint64 {
+	return b / 1024 / 1024
+}
+
+func parseCL() ([]string, []string) {
+	var args = []string{}
+	var flags = []string{}
+	for i := 1; i < len(os.Args); i++ {
+		if strings.HasPrefix(os.Args[i], "-") { //flags
+			flags = append(flags, strings.TrimPrefix(os.Args[i], "-"))
+		} else {
+			args = append(args, os.Args[i])
+		}
+	}
+	return args, flags
 }
