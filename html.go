@@ -29,18 +29,16 @@ func loadtemplates() {
 	}
 	//+params
 	frfpanehtml.Params = frfpanehtml.TParams{Feedpath: RunCfg.feedpath, Step: Config.step, Singlemode: false,
-		IndexPrefix: "/t/", IndexPostfix: ""}
+		IndexPrefix: "/t/", IndexPostfix: "", LocalLink: "<a href=/p/$id>☀</a>"}
 	jpath = RunCfg.feedpath + "json/posts_"
 }
 
 func genhtml(list []string, id string, isindex bool, title string, pen string) string {
-	maxx := len(list)
 	outtext := "<h2>" + title + "</h2>"
-	for i := 0; i < maxx; i++ {
-		if len(list[i]) < 2 {
-			continue
+	for i := 0; i < len(list); i++ {
+		if len(list[i]) > 1 {
+			outtext += frfpanehtml.LoadJson(jpath+list[i]).ToHtml(list[i], pen) + "<hr>"
 		}
-		outtext += frfpanehtml.LoadJson(jpath+list[i]).ToHtml(list[i], pen) + "<hr>"
 	}
 	ptitle := RunCfg.feedname + " - " + title + " - frf-pane"
 	return frfpanehtml.MkHtmlPage(id, outtext, isindex, RunCfg.maxlastlist, RunCfg.feedname, ptitle)

@@ -15,29 +15,34 @@ func helpprog() {
 
 func main() {
 	fmt.Printf("Frf-pane %s\n\n", myversion)
-	if len(os.Args) != 3 {
+	args, flags := parseCL()
+	if len(args) != 2 {
 		helpprog()
 	}
-	feedname := os.Args[2]
-	if os.Args[1] == "list" {
-		listFeeds(feedname)
-		os.Exit(0)
-	}
+	feedname := args[1]
 	if feedname == "@myname" {
 		feedname = ReadBFConf()
 	}
-	if !isexists("feeds/" + feedname) {
+	if (feedname != "all") && !isexists("feeds/"+feedname) {
 		outerror(2, "Feed '%s' not found\n", feedname)
 	}
 	ReadConf()
+	//flags
+	for _, v := range flags {
+		if v == "i" {
+			RunCfg.ftsenabled = true
+		}
+	}
 
 	MkFeedPath(feedname)
 	dbpath := RunCfg.feedpath + "pane/"
-	switch os.Args[1] {
+	switch args[0] {
 	case "build":
 		os.RemoveAll(RunCfg.feedpath + "pane")
 		os.Mkdir(RunCfg.feedpath+"pane", 0755)
 		indexer(dbpath)
+	case "list":
+		listFeeds(feedname)
 	case "server":
 		if !isexists(dbpath + "list.db") {
 			outerror(2, "FATAL: No index DB found\n")
@@ -48,11 +53,17 @@ func main() {
 		defer closeDB(&ListDB)
 		defer closeDB(&HashtagDB)
 		defer closeDB(&ByMonthDB)
+		RunCfg.ftsenabled = isexists(dbpath + "index.db")
+		if RunCfg.ftsenabled {
+			openDB(dbpath+"index.db", "pane", &IdxDB)
+			openDB(dbpath+"timelx.db", pane, &TlxDB)
+			defer closeDB(&IdxDB)
+			defer closeDB(&TlxDB)
+		}
 		loadtemplates()
 		RunCfg.maxlastlist = (len(recsDB(&ListDB)) - 1) * Config.step
 		if len(Config.pidfile) > 2 {
-			pid := os.Getpid()
-			writepid(pid)
+			writepid()
 		}
 		startServer()
 	default:

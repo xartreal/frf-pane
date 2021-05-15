@@ -6,7 +6,7 @@
     <meta name="dcterms.created" content="Ср, 10 июн 2015 05:27:33 GMT">
     <meta name="description" content="">
     <meta name="keywords" content="">
-    <title>backfrf readme</title>
+    <title>frf-pane readme</title>
 
     <style type="text/css">
     <!--
@@ -43,7 +43,9 @@ debug, port<br><br>
 <br>
 <code>frf-pane build @myname</code>
 <br>
-(имя фида берется из настроек)
+(имя фида берется из настроек)<br><br>
+Для подключения FTS необходимо использовать ключ i:<br>
+<code>frf-pane -i build <i>feedname</i></code>
 <h3>2.2. запуск сервера</h3>
 <code>frf-pane server <i>feedname</i></code>
 <br>
@@ -52,7 +54,6 @@ debug, port<br><br>
 <code>frf-pane server @myname</code>
 <br>
 (имя фида берется из настроек)
-
 <h2>3. просмотр</h2>
 После запуска сервера просмотр выполняется в браузере по адресу http://localhost:3000/ (по умолчанию).<br>
 Если номер порта изменялся в настройках, то просмотр будет по адресу http://localhost:NNNN/, где NNNN - номер заданного порта

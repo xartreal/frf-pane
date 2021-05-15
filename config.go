@@ -7,7 +7,7 @@ import (
 	"github.com/vaughan0/go-ini"
 )
 
-var myversion = "0.3.3"
+var myversion = "0.3.4"
 
 //var useragent = "ARL backfrf/" + myversion
 

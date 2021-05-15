@@ -25,7 +25,7 @@ var dbgout string
 
 func addToDBList(list string, id string, indb *KVBase) {
 	fbin, _ := indb.MyCollection.Get([]byte(list))
-	indb.MyCollection.Set([]byte(list), addtolist(fbin, id)) // add to hashtag.db
+	indb.MyCollection.Set([]byte(list), addtolist(fbin, id))
 }
 
 func getHashList(text string) []string {

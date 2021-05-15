@@ -27,6 +27,7 @@ func startServer() {
 	e.POST("/f", findBackHandler)
 	e.GET("/c", changeFeedFront)
 	e.GET("/cx/:feed", changeFeedHandler)
+	e.GET("/p/:id", phandler)
 	e.Start(RunCfg.port)
 
 }
@@ -101,6 +102,17 @@ func hlisthandler(c echo.Context) error {
 	return c.HTML(200, mkhtml(out, "Hashtags"))
 }
 
+func phandler(c echo.Context) error {
+	id := c.Param("id")
+	out := ""
+	if !isexists(RunCfg.feedpath + "json/posts_" + id) {
+		out = mkhtml("Not found error", "Error")
+	} else {
+		out = genhtml([]string{id}, "", false, id, "")
+	}
+	return c.HTML(200, out)
+}
+
 func statdb(indb *KVBase, title string) string {
 	list := recsDB(indb)
 	out := fmt.Sprintf("<p><b>%s</b>: %d items</p><p>", title, len(list)-1)
@@ -117,25 +129,14 @@ func statdb(indb *KVBase, title string) string {
 func stathandler(c echo.Context) error {
 	out := "<h2>Statistics</h2>"
 	list := recsDB(&ListDB)
-	out += fmt.Sprintf("<p><b>Pages</b>: %d (~%d records)</p>", len(list)-1, (len(list)-1)*30)
-	out += statdb(&ByMonthDB, "By month")
-	out += statdb(&HashtagDB, "By hashtag")
+	out += fmt.Sprintf("<p><b>Pages</b>: %d (~%d records)</p>", len(list)-1, (len(list)-1)*30) +
+		statdb(&ByMonthDB, "By month") +
+		statdb(&HashtagDB, "By hashtag")
 	return c.HTML(200, mkhtml(out, "Statistics"))
 }
 
 func findFrontHandler(c echo.Context) error {
-	out := `
-	<h2>Find</h2>
-	<form action=/f method=post>
-  	<input name=mode type=hidden value=none>
-  	<div class="form-item">
-    	<label>Search in feed for:</label>
-    	<input class="w50" name=qword type=text>
-  	</div>
-  	<button type=submit class="button" value=Submit>Find</button>
-  	</form>
-	`
-	return c.HTML(200, mkhtml(out, "Find"))
+	return c.HTML(200, mkhtml(loadtfile("template/template_kfind.html"), "Find"))
 }
 
 func findBackHandler(c echo.Context) error {

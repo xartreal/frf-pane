@@ -52,14 +52,13 @@ type index map[string][]string
 // add adds documents to the index.
 func (idx index) add(text, id string) {
 	for _, token := range analyze(text) {
-		if len(token) < 3 { //skip if small len
-			continue
+		if len(token) > 2 { //skip if small len
+			ids := idx[token]
+			if ids != nil && ids[len(ids)-1] == id { // Don't add same ID twice.
+				continue
+			}
+			idx[token] = append(ids, id)
 		}
-		ids := idx[token]
-		if ids != nil && ids[len(ids)-1] == id { // Don't add same ID twice.
-			continue
-		}
-		idx[token] = append(ids, id)
 	}
 }
 
