@@ -64,7 +64,7 @@ func indexer(dbpath string) {
 	idx := make(index)
 	start := time.Now()
 	ilist := RunCfg.feedpath + "index/list_"
-	jposts := RunCfg.feedpath + "json/posts_"
+	jposts := RunCfg.feedpath + "json/"
 	for isexists(ilist + strconv.Itoa(hstart)) {
 		jpost := new(FrFjson)
 		logtxt += fmt.Sprintf("offset %d\n", hstart)

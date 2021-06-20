@@ -105,7 +105,7 @@ func hlisthandler(c echo.Context) error {
 func phandler(c echo.Context) error {
 	id := c.Param("id")
 	out := ""
-	if !isexists(RunCfg.feedpath + "json/posts_" + id) {
+	if !isexists(RunCfg.feedpath + "json/" + id) {
 		out = mkhtml("Not found error", "Error")
 	} else {
 		out = genhtml([]string{id}, "", false, id, "")

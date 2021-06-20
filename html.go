@@ -30,7 +30,7 @@ func loadtemplates() {
 	//+params
 	frfpanehtml.Params = frfpanehtml.TParams{Feedpath: RunCfg.feedpath, Step: Config.step, Singlemode: false,
 		IndexPrefix: "/t/", IndexPostfix: "", LocalLink: "<a href=/p/$id>☀</a>"}
-	jpath = RunCfg.feedpath + "json/posts_"
+	jpath = RunCfg.feedpath + "json/"
 }
 
 func genhtml(list []string, id string, isindex bool, title string, pen string) string {
